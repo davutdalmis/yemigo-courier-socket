@@ -478,6 +478,58 @@ io.on('connection', async (socket) => {
     }
   });
 
+  // ==================== POS BAĞLANTISI ====================
+
+  socket.on('pos:connect', async (data) => {
+    try {
+      const { branchId, posName } = data;
+      if (!branchId) {
+        socket.emit('error', { message: 'Missing branchId' });
+        return;
+      }
+
+      console.log(`🖥️ [${localMetrics.instanceId}] POS bağlandı: ${posName || 'Unknown'} - Şube: ${branchId}`);
+
+      socket.join(`branch:${branchId}`);
+      socket.branchId = branchId;
+      socket.isPos = true;
+      socket.posName = posName;
+
+      // Şubenin kuryelerini gönder
+      const courierIds = await getBranchCouriers(branchId);
+      const couriers = [];
+
+      for (const courierId of courierIds) {
+        const courierData = await getCourier(courierId);
+        if (courierData) {
+          couriers.push({
+            courierId,
+            name: courierData.name,
+            location: courierData.location,
+            batteryLevel: courierData.batteryLevel,
+            lastUpdate: courierData.lastUpdate,
+            isOnline: (Date.now() - new Date(courierData.lastUpdate).getTime()) < CONFIG.COURIER_TIMEOUT_MS
+          });
+        }
+      }
+
+      // POS'a mevcut kuryelerin listesini gönder
+      socket.emit('couriers:list', couriers);
+
+      // Bağlantı onayı
+      socket.emit('pos:connected', {
+        success: true,
+        branchId,
+        courierCount: couriers.length,
+        serverTime: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('pos:connect hatası:', error);
+      socket.emit('error', { message: 'POS connection failed' });
+    }
+  });
+
   // ==================== PANEL ABONELİĞİ ====================
 
   socket.on('branch:subscribe', async (data) => {
