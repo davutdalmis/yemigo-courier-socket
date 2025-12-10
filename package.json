@@ -1,7 +1,7 @@
 {
   "name": "yemigo-courier-socket",
-  "version": "1.0.0",
-  "description": "YemiGO Express - Kurye Konum Takip Socket.io Sunucusu",
+  "version": "3.0.0",
+  "description": "YemiGO Express - Kurye Konum Takip Socket.io Sunucusu (10K+ Kurye)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,6 +10,8 @@
   "dependencies": {
     "express": "^4.18.2",
     "socket.io": "^4.7.2",
+    "@socket.io/redis-adapter": "^8.2.1",
+    "redis": "^4.6.12",
     "cors": "^2.8.5"
   },
   "engines": {
